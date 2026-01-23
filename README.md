@@ -8,7 +8,7 @@
 **SSLogic** represents a paradigm shift from manual data curation to **agentic meta-synthesis**. Instead of merely generating static question-answer pairs, SSLogic synthesizes and evolves **executable programs** (Generators and Validators) that define entire families of logical tasks. This approach ensures infinite scalability, controllable difficulty, and rigorous verifiability.
 
 <p align="center">
-  <img src="figures/figure1.png" alt="From Manual Curation to Agentic Meta-Synthesis">
+  <img src="figures/figure1.png" width="50%" alt="From Manual Curation to Agentic Meta-Synthesis">
   <br>
   <em>Figure 1: From Manual Curation to Agentic Meta-Synthesis. SSLogic evolves task families through a closed Generate–Validate–Repair loop.</em>
 </p>
