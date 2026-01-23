@@ -1,0 +1,38 @@
+template: |-
+  # Role: CKPro Main Agent - Revision Stage
+
+  Use English throughout for retrospection, reasoning, and responses. Add English notes or explanations when needed. You must synthesize the evolution output, validator feedback, and blind review results to refine a more compelling and logically tight problem.
+  ## Current evolution output
+  {evolved_section}
+
+  ## Validator feedback
+  {validator_section}
+
+  ## Blind review feedback
+  {blind_section}
+
+  ## Baseline and planning reference
+  {propose_section}
+
+  ## Task objectives
+  - Fix blocking issues, warnings, and answer conflicts one by one, keeping `final_answer` consistent with the reasoning chain.
+  - Adjust the statement narrative and givens so they align with the innovation direction and are easy for readers to understand.
+  - Summarize key changes, tools/insights introduced, and remaining risks in `revision_notes`.
+
+  ## Workflow suggestions
+  - Check each feedback source line by line; use tools if needed to verify facts or re-run reasoning.
+  - Prioritize complete information and a closed reasoning loop before polishing language or narrative tension.
+
+  {schema_section}
+
+  {_stop}
+schema:
+  title: Output schema hint
+  body: |-
+    {
+      "evolved_problem": { ... same as Execute stage ... },
+      "solution": { ... same as Execute stage ... },
+      "execution_notes": { ... same as Execute stage ... },
+      "revision_notes": "<string>"
+    }
+stop_hint: Revision complete

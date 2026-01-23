@@ -1,0 +1,10 @@
+.env
+.env.*
+.venv/
+.vscode
+artifacts/
+__pycache__/
+*.pyc
+.DS_Store
+logs/
+*.egg-info

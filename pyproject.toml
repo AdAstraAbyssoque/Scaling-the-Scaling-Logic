@@ -1,0 +1,32 @@
+[project]
+name = "sslogic"
+version = "0.1.0"
+description = "SSLogic core: agentic meta-synthesis pipeline for verifiable logic tasks."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+dependencies = [
+  "numpy",
+  "pyyaml",
+  "requests",
+  "rich",
+]
+
+[project.optional-dependencies]
+llm = [
+  "boto3",
+  "ddgs",
+  "openai",
+  "transformers",
+]
+eval = [
+  "numpy",
+  "tqdm",
+  "pebble",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,41 @@
+## Detailed Notes
+
+- **ck_pro.agents:**
+  - The overall framework is similar to huggingface-smolagents, but with significant simplifications.
+  - `utils.py`: Contains some helper functions and classes worth noting:
+    - `KwargsInitializable`: Uses an unconventional way to simplify configuration by reading parameters passed via **kwargs in `__init__` for configuration. One tricky point is that subclasses also need to call `super()` for initialization. See `ck_web/agent.py:WebAgent`'s `__init__` for an example.
+    - `TemplatedString`: Simplifies prompt definition, allowing you to define prompt templates using a function or f-string. See `{ck_web,ck_main}/prompts.py` for details.
+    - `CodeExecutor`: Similar to the previous CK system, it directly uses `exec` to execute Python code (simple and straightforward).
+  - `session.py`: Defines the main `AgentSession` class:
+    - Used to store information related to a task-solving session. `AgentSession.steps` stores information for each step.
+  - `model.py`: Defines the main `LLM` class, including:
+    - `LLM.call_target`: If set to "manual", it allows user input for easy debugging. If set to "gpt:{gpt_model_name}", it calls the specified GPT model (see the `OpenaiHelper` class for details). If it starts with "http", it uses a remotely deployed vllm-service.
+    - `LLM.call_kwargs` specifies the default parameters for LLM calls.
+    - `LLM.__call__` wraps the call with a retry mechanism—if an error occurs, it retries (number of retries specified by `LLM.max_retry_times`). The input/output format for LLM calls is described in detail in the Data Section.
+  - `tool.py`: Defines the main `Tool` class, including:
+    - The `Tool` class is greatly simplified. You need to define a specific implementation function (for actual code execution) and a function definition (for prompt input).
+    - `StopTool`: A special function to mark the end of a task.
+  - `agent.py`: Defines the main `MultiStepAgent` class, including:
+    - `MultiStepAgent.sub_agents` and `MultiStepAgent.tools` are the sub-functions available to the agent. A sub_agent is a submodule (also an LLM-based agent), while a tool is a pre-defined Python function (defined in the Tool class).
+    - `MultiStepAgent.model` is a `model.py:LLM` instance that handles the actual LLM calls for the agent.
+    - `MultiStepAgent.templates` stores prompt templates for different modules, which can be defined and accessed using `register_template`/`get_template`.
+    - `MultiStepAgent.max_steps` specifies the maximum number of steps the agent can take. `MultiStepAgent.recent_steps` determines how many recent steps' information is included in the input prompt. `MultiStepAgent.store_io` indicates whether to store the input/output of each LLM call (files can get large, but this is useful for training). `MultiStepAgent.active_functions` indicates which sub-agents and tools are active (included in the input prompt).
+    - `MultiStepAgent.__call__` and `MultiStepAgent.get_function_definition` are used when the agent is called as a sub-agent by another agent. `get_function_definition` returns the function definition line for the input prompt. The protocol for `__call__` is: input is the task (instruction); output includes the output (in a specified format) and log (other information, such as errors).
+    - `MultiStepAgent.run` and `MultiStepAgent.yield_session_run`: The main running loop. Initializes an `AgentSession` to store the entire procedure, uses `progress_state` to represent the solving state, and performs each step with `MultiStepAgent.step`. Finally, `MultiStepAgent.finalize` formats the final output.
+    - `MultiStepAgent.step`: In each step, if a plan template is specified, the plan module is executed to update `progress_state`, then the action module is executed to get the current action code, and `MultiStepAgent.step_action` is called to execute the action (by default, uses the code executor to run the generated code; some special classes may have additional operations). For each LLM call, input_kwargs are prepared (`MultiStepAgent._prepare_common_input_kwargs`), then the input for the LLM call is generated using `self.templates["module_name"].format(**_input_kwargs)` (see the Data Section below for input format). The LLM call (`MultiStepAgent._call_model`) returns a string (see the Data Section below for output format), which can be parsed with `MultiStepAgent._parse_output`.
+    - `MultiStepAgent.finalize`: Used to format the final result; you can also specify the LLM and corresponding template to complete this.
+    - Methods to be implemented in subclasses: `init_run` (pre-processing before each run), `end_run` (post-processing after each run), `step_prepare` (preparing input kwargs for each step's prompt), `step_action` (action execution for each step), `step_check_end` (check whether to end the run after the current step).
+- **ck_pro.ck_web: web-agent**
+  - `_web`: Contains the adapted web-browser-server (mainly from CK-v2), with some minor modifications (e.g., added try-catch and a goto method). Currently, screenshot information is disabled and needs to be re-enabled in the future.
+  - `utils.py`: Mainly defines the helper class `WebEnv` and related state `WebState` (based on `call_web.py` from CK-v2).
+  - `agent.py`: Defines the `WebAgent` subclass of `MultiStepAgent`. As mentioned in `KwargsInitializable`, `super()` requires some tricky handling for correct initialization.
+    - `WebAgent.web_envs` stores the `WebEnv` for each task.
+    - `PREDEFINED_WEB_ACTIONS`: For code and action execution, the current approach is to have the code generate an action string (as defined in `PREDEFINED_WEB_ACTIONS`), which is then parsed again in `WebEnv` (since the parsing function was already implemented in `WebEnv`).
+    - `init_run`, `end_run`, `step_prepare`, `step_action`, and `step_check_end` also have some additional operations specific to the web environment.
+  - `prompts.py`: Prompt templates for the web agent, with three modules: plan, action, and end.
+  - `main.py`: Directly tests the web agent.
+- **ck_pro.ck_main: main-agent**
+  - `agent.py`: Defines the `CKAgent` subclass of `MultiStepAgent`. As mentioned in `KwargsInitializable`, `super()` requires some tricky handling for correct initialization.
+    - The main point to note here is the addition of sub-agents and tools. Currently, a web-agent and stop-tool are added; new sub-agents and tools can be added similarly in the future.
+  - `prompts.py`: Prompt templates for the main agent. The end module is omitted for simplicity; instead, a stop-tool is used to mark the end of a run.
+  - `main.py`: Directly tests the main agent.

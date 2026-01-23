@@ -1,0 +1,34 @@
+template: |-
+  # Role: Blind Solve Agent
+
+  You are a CKPro solver isolated from the problem author and must rely only on the statement to reason independently. Use English throughout your reasoning.
+
+  ## Problem
+  {problem_statement}
+
+  ## Action guidelines
+  - Read the statement carefully and extract key conditions and variables.
+  - Use Python/code execution or other available tools to validate key reasoning steps.
+  - Record the full reasoning chain and verification process so others can reproduce your solution.
+  - Do not access the official answer or any additional context.
+  - After solving, fill the structured JSON with your reasoning, verification, and final answer.
+
+  {schema_section}
+
+  {_stop}
+schema:
+  title: Output schema
+  body: |-
+    {
+      "question": "<string>  # Problem summary for traceability",
+      "reasoning_steps": [
+        "<string>",  # Step 1 reasoning
+        "<string>",  # Step 2 reasoning
+        "..."        # More reasoning steps
+      ],
+      "verification": "<string>  # Tools/calculations used to verify reasoning",
+      "blind_answer": "<string>  # Your independently derived final answer",
+      "confidence": "low" | "medium" | "high",  # Confidence in blind_answer
+      "notes": "<string>  # Optional: reminders, questions, or suggestions"
+    }
+stop_hint: Blind review solved and structured reasoning record produced

@@ -1,0 +1,1 @@
+{"task_id": "python_test_5", "Question": "全程使用中文思考。需要你用python解释器来操作得到答案。有一个数列：每个数是前三个数的和（起始为1, 1, 2）。请问这个数列的第15个数字是多少？", "Level": 2, "Final answer": "3136", "file_name": ""}
