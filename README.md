@@ -1,157 +1,168 @@
-# Scaling the Scaling Logic
+<div align="center">
 
-[![Paper](https://img.shields.io/badge/arXiv-2602.13218-b31b1b.svg)](https://arxiv.org/abs/2602.13218)
-[![Project Page](https://img.shields.io/badge/Project-SSLogic-4f46e5.svg)](https://github.com/AdAstraAbyssoque/Scaling-the-Scaling-Logic/)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
-[![Open In GitHub](https://img.shields.io/badge/GitHub-Repository-181717.svg?logo=github&logoColor=white)](https://github.com/your-username/sslogic)
+# Scaling the Scaling Logic (SSLogic)
+### Agentic Meta-Synthesis of Verifiable Logic Reasoning
 
-> **Scaling the Scaling Logic: Agentic Meta-Synthesis of Logic Reasoning**
+**Bowen Liu, Zhi Wu, Runquan Xie, Zhanhui Kang, Jia Li**  
+Tencent Hunyuan, Tencent | HKUST (Guangzhou)
 
-**SSLogic** represents a paradigm shift from manual data curation to **agentic meta-synthesis**. Instead of merely generating static question-answer pairs, SSLogic synthesizes and evolves **executable programs** (Generators and Validators) that define entire families of logical tasks. This approach enables scalable data generation, controllable difficulty, and rigorous verifiability.
+[![arXiv](https://img.shields.io/badge/arXiv-2602.13218-b31b1b.svg)](https://arxiv.org/abs/2602.13218)
+[![DOI](https://img.shields.io/badge/DOI-10.48550%2FarXiv.2602.13218-blue.svg)](https://doi.org/10.48550/arXiv.2602.13218)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
+
+**[Paper](https://arxiv.org/abs/2602.13218) | [Code](https://github.com/AdAstraAbyssoque/Scaling-the-Scaling-Logic)**
+
+</div>
 
 <p align="center">
-  <img src="figures/figure1.png" width="50%" alt="From Manual Curation to Agentic Meta-Synthesis">
-  <br>
-  <em>Figure 1: From Manual Curation to Agentic Meta-Synthesis. SSLogic evolves task families through a closed Generate–Validate–Repair loop.</em>
+  <img src="figures/Image%20(1).png" width="96%" alt="SSLogic multi-gate framework overview" />
+</p>
+<p align="center">
+  <em>Figure 1. Multi-Gate Agentic Meta-Synthesis in SSLogic: a closed loop over task-family synthesis, consensus-based verification, blind review, and failure-driven refinement.</em>
 </p>
 
----
+## Abstract
 
-## Overview
+Scaling verifiable training signals remains a core bottleneck for reinforcement learning from verifiable rewards (RLVR). Existing logic-data pipelines typically scale at the instance level (template perturbations and parameter sweeps), which limits structural diversity and long-horizon reasoning value. SSLogic moves scaling to the task-family level: agents iteratively synthesize and refine executable `Generator-Validator` program pairs in a Generate-Validate-Refine loop. To control data quality, SSLogic introduces a Multi-Gate Validation Protocol that combines static quality checks, consensus-based dynamic verification, and adversarial blind review. Starting from 400 human seed families, SSLogic expands to 953 families and 21,389 verifiable instances, yielding consistent gains under fixed-step RL training.
 
-Scaling verifiable training signals remains a key bottleneck for Reinforcement Learning from Verifiable Rewards (RLVR). SSLogic addresses this by moving beyond instance-level synthesis: it **iteratively synthesizes and repairs executable Generator–Validator program pairs**, allowing logical task families to evolve through a closed **Generate–Validate–Repair** loop.
+## Core Contributions
 
-Starting from **400 seed families**, SSLogic expands through two rounds of evolution to **953 task families** and **21,389 verifiable instances** (from **5,718**), while maintaining reliability through a **Multi-Gate Validation Protocol**.
+1. **Task-family-level scaling**: SSLogic treats executable task specifications `(G, V)` as evolvable objects, not fixed templates.
+2. **Multi-Gate reliability control**: Quality gate + consensus validation + blind review reduce ambiguity, unsolvability, and implementation leakage.
+3. **Downstream RL effectiveness**: Evolved data improves logic and math performance at matched optimization steps, with measurable trajectory-level behavior shifts.
 
-## Key Features
+## Framework Overview
 
-- **Agentic Meta-Synthesis**: Moves from instance-level generation to **task-family synthesis**. Agents write executable Python programs that generate entire distributions of logic tasks.
-- **Multi-Gate Validation Protocol**:
-  - **Multi-Strategy Consistency Checks**: Multiple validation strategies reduce evaluator bias.
-  - **Adversarial Blind Review**: Independent agents must solve generated instances strictly from the task description.
-- **Closed-Loop Repair**: Failed candidates are not discarded immediately; they receive structured error logs and are iteratively repaired.
-- **Controllable Evolution**: Task families can be expanded while preserving verifiability and increasing algorithmic depth.
+SSLogic instantiates a three-phase agentic pipeline:
 
-## Performance & Impact
+1. **Phase I - Context-Aware Specification Synthesis**
+Main Agent receives a seed idea, injects reusable experience, and writes `generator.py` / `validator.py` with execution checks.
 
-Training on **SSLogic-evolved** data yields consistent gains over seed-only baselines at matched optimization steps.
+2. **Phase II - Multi-Gate Validation Protocol**
+- Gate 1: static quality assurance (format, clarity, solvability signals).
+- Gate 2: consensus-based dynamic verification across independent validators.
+- Blind Review: independent agents solve from text-only statements; acceptance requires thresholded agreement with canonical answers.
 
-| Metric               | Seed Baseline | **SSLogic Evolved** | Gain      |
-| :------------------- | :-----------: | :-----------------: | :-------- |
-| **SynLogic**         |     14.6      |   **19.8**          | **+5.2**  |
-| **BBEH**             |      —        |   **Improved**      | **+1.4**  |
-| **AIME25**           |      —        |   **Improved**      | **+3.0**  |
-| **Brumo25**          |      —        |   **Improved**      | **+3.7**  |
+3. **Phase III - Feedback-Driven Refinement**
+Failed candidates trigger structured debugging (ambiguity, algorithmic bug, logic gap), then re-enter refinement until acceptance or stop.
 
-> _Reported gains are taken from the paper abstract / project summary on arXiv._
+## Empirical Snapshot
 
-<details>
-<summary><strong>View Training Dynamics (Click to Expand)</strong></summary>
+### Data Scaling
 
-### Evolution of Reasoning
+| Metric | Seed | Evolved | Delta |
+| :-- | --: | --: | --: |
+| Task families | 400 | **953** | +553 |
+| Verifiable instances | 5,718 | **21,389** | +15,671 |
 
-SSLogic training drives the model toward longer reasoning chains and deeper self-reflection.
+### RL Gains (paper-reported, matched-step setting)
 
-|                                                                              |                                                                            |
-| :--------------------------------------------------------------------------: | :------------------------------------------------------------------------: |
-| <img src="figures/figure3.png" width="400" alt="Reflection Token Frequency"> | <img src="figures/figure4.png" width="400" alt="Response Length Dynamics"> |
-|                           **Reflection Frequency**                           |                            **Response Length**                             |
+| Benchmark | Improvement |
+| :-- | --: |
+| SynLogic | **+5.2** |
+| BBEH | **+1.4** |
+| AIME25 | **+3.0** |
+| Brumo25 | **+3.7** |
 
-</details>
+### Pipeline Diagnostics (100 sampled synthesis traces)
 
-## Methodology
+| Diagnostic | Value |
+| :-- | --: |
+| Gate 1 pass rate | 67.0% |
+| Gate 2 consensus OK | 93.0% |
+| Blind-review pass (overall acceptance) | **55.0%** |
+| Runtime gap (rejected vs accepted) | **6.5x** |
+| Amortized cost per accepted family | **$1.18** |
 
-SSLogic operates in a **Generate–Validate–Repair** closed loop:
-
-1. **Synthesis**  
-   An agent generates a `Generator` (for creating instances) and a `Validator` (for checking answers).
-
-2. **Gated Validation**  
-   - **Gate 1**: Program quality and consistency checks  
-   - **Gate 2**: Adversarial blind review — can an independent agent solve the task strictly from the written description?
-
-3. **Feedback-Driven Repair**  
-   If validation fails, the agent receives structured execution / review feedback and attempts to patch the code.
+## Analysis Glimpses
 
 <p align="center">
-  <img src="figures/figure6.png" width="80%" alt="Code Complexity Analysis">
-  <br>
-  <em>Figure 2: Code-level complexity analysis showing increased algorithmic depth in evolved tasks.</em>
+  <img src="figures/figure6.png" width="78%" alt="Code complexity metrics across seed and evolved sources" />
+</p>
+<p align="center">
+  <em>Code-level complexity analysis: evolved task families show richer control flow and algorithmic depth.</em>
+</p>
+
+<p align="center">
+  <img src="figures/figure3.png" width="42%" alt="Reflection token frequency" />
+  <img src="figures/figure4.png" width="42%" alt="Response length dynamics" />
+</p>
+<p align="center">
+  <em>Training dynamics: reflection-like signals and response length co-evolve with logic-data training.</em>
 </p>
 
 ## Installation
 
-### Prerequisites
-
-- Python 3.9+
-- [uv](https://github.com/astral-sh/uv) (recommended) or pip
-
-### Setup
-
 ```bash
-git clone https://github.com/your-username/sslogic.git
-cd sslogic
+git clone https://github.com/AdAstraAbyssoque/Scaling-the-Scaling-Logic.git
+cd Scaling-the-Scaling-Logic
 
 uv sync
-````
+uv pip install -e .
+```
 
 ## Quick Start
 
-The main entry point for the pipeline is `scripts/run_pipeline.py`.
-
-### 1. Evolve a Seed Idea
-
-Generate a new verifiable task family from a simple text description.
+### 1) Run a single-seed synthesis session
 
 ```bash
-uv run scripts/run_pipeline.py \
-    --seed "Calculate the sum of two numbers where one is double the other, subject to a modulo constraint." \
-    --max-iterations 3 \
-    --output-dir artifacts/my_experiment
+uv run python -m sslogic.pipeline.run_pipeline \
+  --seed "Design a verifiable logic task involving constrained swaps on a sequence" \
+  --max-iterations 3
 ```
 
-### 2. Run from a Seed File
-
-Process a batch of seed ideas defined in a JSONL file.
+### 2) Run from a JSONL seed file
 
 ```bash
-uv run scripts/run_pipeline.py \
-    --seed-file data/seeds.jsonl \
-    --seed-key "question" \
-    --max-iterations 5
+uv run python -m sslogic.pipeline.run_pipeline \
+  --seed-file src/sslogic/pipeline/example/logic_reasoning.jsonl \
+  --seed-id Add_one_eliminate_20250919 \
+  --seed-key question \
+  --max-iterations 3 \
+  --output src/sslogic/pipeline/example/answer/answer.jsonl
 ```
 
-## Project Structure
+### 3) Override model backend
+
+```bash
+uv run python -m sslogic.pipeline.run_pipeline \
+  --seed "Construct a shortest-path logic puzzle with hidden constraints" \
+  --model openai:gpt-4o-mini
+```
+
+## Output Artifacts
+
+Each run writes structured artifacts under:
 
 ```text
-sslogic/
-├── artifacts/             # Generated task families (code & data)
-├── eval/                  # Evaluation harness
-├── figures/               # Paper figures & visuals
-├── scripts/               # Utility scripts
-│   └── run_pipeline.py    # Main pipeline entry point
-├── src/
-│   └── sslogic/           # Core package
-│       ├── pipeline/
-│       └── ck_pro/
-├── LICENSE
-└── pyproject.toml
+src/sslogic/pipeline/artifacts/session/<xx>/<session_id>/
 ```
 
-## Algorithmic Coverage
+Typical outputs include:
 
-SSLogic evolves tasks covering a wide range of algorithmic patterns, shifting the distribution from simple linear logic toward more complex graph, search, and dynamic-programming-style reasoning problems.
+- `propose-*.json`
+- `execute-iter*.json`
+- validator and blind-review traces (`*.json`, `*.log`)
+- `final_answer.json`
 
-<p align="center">
-  <img src="figures/figure8.png" width="40%" alt="Algorithmic Pattern Coverage">
-  <br>
-  <em>Figure 3: Algorithmic Pattern Coverage.</em>
-</p>
+## Repository Layout
+
+```text
+.
+|-- README.md
+|-- pyproject.toml
+|-- figures/
+|-- scripts/
+|   `-- run_pipeline.py
+|-- src/
+|   `-- sslogic/
+|       |-- pipeline/      # Core multi-agent synthesis pipeline
+|       `-- ck_pro/        # Cognitive Kernel-Pro based agent stack
+`-- eval/
+```
 
 ## Citation
-
-If you find **SSLogic** useful for your research, please cite:
 
 ```bibtex
 @article{liu2026sslogic,
@@ -164,13 +175,6 @@ If you find **SSLogic** useful for your research, please cite:
 }
 ```
 
-## Links
-
-* **Paper**: [arXiv:2602.13218](https://arxiv.org/abs/2602.13218)
-* **DOI**: [10.48550/arXiv.2602.13218](https://doi.org/10.48550/arXiv.2602.13218)
-* **Code**: [GitHub Repository](https://github.com/your-username/sslogic)
-
 ## License
 
-This project is licensed under the [Apache License 2.0](LICENSE).
-
+This project is licensed under the [Apache-2.0 License](LICENSE).
